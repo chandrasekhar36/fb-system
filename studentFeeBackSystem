@@ -1,0 +1,172 @@
+from tkinter import *
+from tkinter import ttk
+from tkinter import messagebox
+def loadmail():
+    try:
+        import smtplib
+        global mail
+        mail = smtplib.SMTP('smtp.gmail.com',587)
+        mail.ehlo()
+        mail.starttls()
+        mail.ehlo()
+        mail.login('fbsystem0@gmail.com','feedback123')
+    except:
+        return 1
+loadmail()
+root = Tk()
+#root.master.title("form")
+frame_header = ttk.Frame(root)
+frame_header.pack()
+logo = PhotoImage(file='aitam.jpg').subsample(6,6)
+logolabel = ttk.Label(frame_header, text='logo', image=logo)
+logolabel.grid(row=0, column=0, rowspan=10)
+headerlabel = ttk.Label(frame_header, text='STUDENT FEEDBACK', foreground='RED',
+                        font=('Algerian', 24))
+headerlabel.grid(row=0, column=1)
+messagelabel = ttk.Label(frame_header,
+                         text='PLEASE TELL YOUR ISSUES HERE',
+                         foreground='purple', font=('times new roman', 10))
+messagelabel.grid(row=1, column=1)
+
+frame_content = ttk.Frame(root)
+frame_content.pack()
+# def submit():
+#     username = entry_name.get()
+#     print(username)
+myvar = StringVar()
+var = StringVar()
+uname=StringVar()
+upwd=StringVar()
+# cmnt= StringVar()
+namelabel = ttk.Label(frame_content, text='Name')
+namelabel.grid(row=0, column=0, padx=5, sticky='sw')
+entry_name = ttk.Entry(frame_content, width=18, font=('Arial', 14), textvariable=myvar)
+entry_name.grid(row=1, column=0)
+
+emaillabel = ttk.Label(frame_content, text='Email')
+emaillabel.grid(row=0, column=1, sticky='sw')
+entry_email = ttk.Entry(frame_content, width=18, font=('Arial', 14), textvariable=var)
+entry_email.grid(row=1, column=1)
+
+commentlabel = ttk.Label(frame_content, text='Comment', font=('Arial', 10))
+commentlabel.grid(row=2, column=0, sticky='sw')
+textcomment = Text(frame_content, width=55, height=10)
+textcomment.grid(row=3, column=0, columnspan=2)
+
+
+textcomment.config(wrap ='word')
+# def clear():
+#     textcomment.delete(1.0,'end')
+def clear():
+    global entry_name
+    global entry_email
+    global textcomment
+    messagebox.showinfo(title='clear', message='Do you want to clear?')
+    entry_name.delete(0, END)
+    entry_email.delete(0, END)
+    textcomment.delete(1.0, END)
+def send_mail(rmail):
+    try:
+        sub="""\
+Subject: Thanks for feedback
+
+Hey, Thanks for your valuable response with us\n\nBest Regards\nFbSystemTeam."""
+        mail.sendmail("fbsystem0@gmail.com",rmail,sub)
+        mail.close()
+    except:
+        print("Unable to send mail!! Connection Failed")
+        loadmail()
+def submit():
+    global entry_name
+    global entry_email
+    global textcomment
+    fp=open("data.txt",'a')
+    s=myvar.get()+'$'+var.get()+'$'+textcomment.get(1.0,END)+'%'
+    fp.write(s)
+    #fp.write('@')
+    fp.close()
+    #print('Name:{}'.format(myvar.get()))
+    #print('Email:{}'.format(var.get()))
+    #print('Comment:{}'.format(textcomment.get(1.0, END)))
+    mail=var.get();
+    messagebox.showinfo(title='Submit', message='Thank you for your Feedback, Your Comments Submited')
+    entry_name.delete(0, END)
+    entry_email.delete(0, END)
+    textcomment.delete(1.0, END)
+    send_mail(mail);
+    
+def showdata():
+    try:
+        f=open("data.txt",'r')
+        data=f.read()
+    #print(data)
+        data=data.split('%')
+    except:
+        print("No Record Found!!!")
+        return
+    if data==None:
+        return
+    if len(data)==1:
+        print("Student feedback")
+        print("student: 1") 
+        k=data[i].split('$')
+        print("name: ",k[0])
+        print("mail: ",k[1])
+        print("feedback: ",k[2],sep='\n')
+        return
+    #print(data)
+    print("Student feedback")
+    j=1
+    for i in range(len(data)-1):
+       print("student:",j) 
+       k=data[i].split('$')
+       print("name: ",k[0])
+       print("mail: ",k[1])
+       print("feedback: ",k[2],sep='\n')
+       j=j+1
+def show(e):
+    global winow
+    global admin_name
+    global admin_pwd
+    winow=Toplevel(root)
+    ulabel=Label(winow,text="user name")
+    plabel=Label(winow,text="password")
+    head=Label(winow,text="Please enter Your details")
+    head.grid(row=0,column=0);
+    admin_name =Entry(winow, width=18, font=('Arial', 14), textvariable=uname)
+    admin_pwd=Entry(winow,width=18,font=('Arial',14),textvariable=upwd,show='*')
+    admin_name.grid(row=1,column=2,padx=10,pady=10)
+    admin_pwd.grid(row=2,column=2,padx=10,pady=10)
+    ulabel.grid(row=1,column=0,padx=10,pady=10)
+    plabel.grid(row=2,column=0,padx=10,pady=10)
+    b1=Button(winow,text="submit")
+    b1.grid(row=3,column=1,padx=10,pady=10)
+    b1.bind('<Button-1>',validate)
+    #b1=Button(winow,text="sample")
+    #b1.pack()
+def validate(e):
+    u=uname.get();
+    p=upwd.get();
+    if u=="admin" and p=="admin":
+        showdata()
+        winow.destroy()
+    else:
+        messagebox.showinfo(title="Incorrect credentials", message='sorry! Credentials are incorrect?')
+        #print("incorrect credentials")  
+        admin_name.delete(0,END)
+        admin_pwd.delete(0,END)
+        
+def shutdown(e):
+	mail.quit()
+	root.destroy()
+submitbutton = ttk.Button(frame_content, text='Submit', command=submit).grid(row=4, column=0, sticky='e')
+clearbutton = ttk.Button(frame_content, text='Clear', command=clear).grid(row=4, column=1, sticky='w')
+#view=ttk.Button(frame_content,text='view Report',command=show).grid(row=4,column=2,sticky='v')
+view=Button(root,text="view")
+view.pack(side=RIGHT,padx=10,pady=10)
+#view.grid(row=5,column=0)
+view.bind('<Button-1>',show)
+close=Button(root,text="close")
+close.pack(side=LEFT)
+close.bind('<Button-1>',shutdown)
+mainloop()
